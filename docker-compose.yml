@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    env_file: .env.docker
+    environment:
+      - ENV_FILE_PATH=.env.docker
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    environment:
+      - ENV_FILE_PATH=.env.docker
+
+  api:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file: .env.docker
+    environment:
+      - ENV_FILE_PATH=.env.docker
+    depends_on:
+      - db
+      - redis
+
+  worker:
+    build: .
+    command: celery -A app_deribit.worker.celery_app worker --loglevel=info
+    env_file: .env.docker
+    environment:
+      - ENV_FILE_PATH=.env.docker
+    depends_on:
+      - redis
+      - db
+
+  beat:
+    build: .
+    command: celery -A app_deribit.worker.celery_app beat --loglevel=info
+    env_file: .env.docker
+    environment:
+      - ENV_FILE_PATH=.env.docker
+    depends_on:
+      - redis
+      - db
+
+volumes:
+  postgres_data:

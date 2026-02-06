@@ -9,8 +9,10 @@ It defines a periodic task schedule (Celery Beat) to automate data fetching.
 
 from celery import Celery
 
+from app_deribit.core.config_env_variable import settings
+
 # Initialize Celery app with Redis as the message broker
-app = Celery('tasks', broker='redis://localhost:6379/0')
+app = Celery('tasks', broker=f'redis://{settings.redis_host}:6379/0')
 
 # Define where the worker should look for tasks
 app.conf.imports = ['app_deribit.worker.tasks']

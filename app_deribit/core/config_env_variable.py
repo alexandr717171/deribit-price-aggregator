@@ -29,8 +29,12 @@ class Settings(BaseSettings):
     POSTGRES_DB: Annotated[str, Field()]
     POSTGRES_HOST: Annotated[str, Field()]
     POSTGRES_PORT: Annotated[str, Field(min_length=3)]
+    redis_host: str = "localhost"
 
-    model_config = SettingsConfigDict(env_file=os.path.join(Path(__file__).parent.parent.parent, '.env'))
+    model_config = SettingsConfigDict(
+        env_file=os.getenv("ENV_FILE_PATH", os.path.join(Path(__file__).parent.parent.parent, '.env')),
+        extra='ignore'  # Игнорировать лишние переменные в .env
+    )
 
     def get_db_url(self):
         database_url = 'postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}'.format(
@@ -42,5 +46,6 @@ class Settings(BaseSettings):
         return database_url
 
 settings = Settings()
+
 db_url = settings.get_db_url()
 
